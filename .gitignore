@@ -1,0 +1,16 @@
+# Environment variables (contains database passwords, API keys, etc.)
+.env
+.env.local
+.env.*
+
+# Local data volumes (database files and n8n internal logs/config)
+postgres_data/
+n8n_data/
+
+# SSL certificates (must be kept secret on the host)
+nginx/certs/
+
+# OS specific files
+.DS_Store
+Thumbs.db
+desktop.ini
