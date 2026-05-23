@@ -13,7 +13,8 @@ services:
       PGDATA: /var/lib/postgresql/data/pgdata
       TZ: ${TZ}
     volumes:
-      - ./postgres_data:/var/lib/postgresql/data
+      # The :Z suffix relabels bind mounts for SELinux-enabled Rocky Linux hosts.
+      - ./postgres_data:/var/lib/postgresql/data:Z
     networks:
       - n8n-network
     healthcheck:
@@ -48,13 +49,17 @@ services:
       N8N_PORT: ${N8N_PORT}
       N8N_PROTOCOL: ${N8N_PROTOCOL}
       WEBHOOK_URL: ${WEBHOOK_URL}
+      N8N_EDITOR_BASE_URL: ${N8N_EDITOR_BASE_URL}
+      N8N_PROXY_HOPS: ${N8N_PROXY_HOPS}
       GENERIC_TIMEZONE: ${GENERIC_TIMEZONE}
       TZ: ${TZ}
+      NODE_ENV: production
       
       # Production mode settings
       N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: ${N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS}
     volumes:
-      - ./n8n_data:/home/node/.n8n
+      # The :Z suffix relabels bind mounts for SELinux-enabled Rocky Linux hosts.
+      - ./n8n_data:/home/node/.n8n:Z
     networks:
       - n8n-network
     depends_on:
@@ -79,17 +84,17 @@ services:
       - "${HOST_HTTP_PORT}:80"
       - "${HOST_HTTPS_PORT}:443"
     volumes:
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro,Z
       # Bind mount for SSL certificates (SSL-ready architecture)
-      - ./nginx/certs:/etc/letsencrypt:ro
+      - ./nginx/certs:/etc/letsencrypt:ro,Z
     networks:
       - n8n-network
     depends_on:
       n8n:
         condition: service_healthy
     healthcheck:
-      # Nginx config syntax check + testing standard server block availability
-      test: ["CMD-SHELL", "nginx -t && wget --spider --quiet http://localhost/ || exit 1"]
+      # Keep this independent of HTTP/HTTPS redirect choices in nginx/default.conf.
+      test: ["CMD-SHELL", "nginx -t || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 3
